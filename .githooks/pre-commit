@@ -1,0 +1,39 @@
+#!/bin/sh
+
+echo "[INFO]: start pre-commit hook"
+
+echo "[INFO]: start flake8 stage"
+flake8_path=$(find -name "flake8.exe")
+
+if ! [ $flake8_path ]; then
+	echo "[ERROR]: no flake8 was found"
+	exit 1
+fi
+
+$flake8_path ./
+
+if [ $? -ne 0 ]; then
+	echo "[ERROR]: flake8 stage was failed"
+	exit 1
+else
+	echo "[INFO]: flake8 stage successfully finished"
+fi
+
+echo "[INFO]: start black stage"
+black_path=$(find -name "black.exe")
+
+if ! [ $black_path ]; then
+	echo "[ERROR]: no black was found"
+	exit 1
+fi
+
+$black_path ./ --check
+
+if [ $? -ne 0 ]; then
+	echo "[ERROR]: black stage was failed"
+	exit 1
+else
+	echo "[INFO]: black stage successfully finished"
+fi
+
+echo "[INFO]: hook was successfully finished"
