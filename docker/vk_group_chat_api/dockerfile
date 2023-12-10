@@ -1,0 +1,29 @@
+FROM python:3.10-bullseye as python-base
+
+RUN apt-get update && \
+    apt-get upgrade -y && \
+    apt-get install -y \
+    git \
+    tree \
+    less \
+    vim \
+    curl \
+    wget \
+    build-essential \
+    python3-pip \
+    mesa-utils \
+    sudo \
+    && \
+    apt-get clean && \
+    rm -rf /var/lib/apt/lists/*
+
+# Copying requirements and installing them
+COPY ./requirements/vk_api-requirements.txt .
+RUN pip install -r vk_api-requirements.txt
+
+# Copying rest of project and installing it
+COPY  ./bdsm_project ./bdsm_project
+COPY ./setup.py .
+RUN pip install -e .
+
+ENTRYPOINT python3 -m bdsm_project.api_managers.vk_group_chat_manager

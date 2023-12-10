@@ -1,40 +1,7 @@
 from abc import ABC, abstractmethod
-from enum import Enum
 from queue import Queue
-from typing import Optional
 
-from pydantic import BaseModel
-
-
-class APIType(Enum):
-    VkGroupChat = 1
-    VkUserChat = 2
-    TGUserChat = 3
-
-
-class MetaData(BaseModel):
-    time: Optional[int] = None
-    user_id: Optional[int] = None
-    chat_id: Optional[int] = None
-
-
-class Message(BaseModel):
-    text: str = ""
-    meta: MetaData
-
-
-class VKMessage(Message):
-    # Example of attachment string
-    # {type}{owner_id}_{media_id}_{access_key}
-    attachment: Optional[str] = None
-    photo_path: Optional[str] = None
-    raw_photo: Optional[str] = None
-
-
-class Task(BaseModel):
-    text: str
-    api_type: APIType
-    meta: MetaData
+from bdsm_project.shemas.data_classes import Message
 
 
 class BaseApiManager(ABC):
@@ -55,7 +22,7 @@ class BaseApiManager(ABC):
         raise NotImplementedError("send_message_to_user method is not implemeted")
 
     @abstractmethod
-    async def add_task(self, task: Task) -> None:
+    async def add_task(self, task: Message) -> None:
         "Add task to TaskManager"
         raise NotImplementedError("add_task method is not implemeted")
 

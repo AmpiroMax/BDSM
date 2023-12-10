@@ -6,19 +6,19 @@ from queue import Queue
 import requests
 import uvicorn
 import vk_api.vk_api
-from base_api_manager import APIType, BaseApiManager, MetaData, Task, VKMessage
 from fastapi import FastAPI
-from secured_data import group_id, vk_api_token
 from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.upload import VkUpload
 from vk_api.utils import get_random_id
 
+from bdsm_project.api_managers.base_api_manager import BaseApiManager
+from bdsm_project.api_managers.secured_data import group_id, vk_api_token
+from bdsm_project.shemas.data_classes import MetaData, VKMessage
 from bdsm_project.utils.serialization import str2obj
 
 logging.basicConfig(
     level=logging.INFO,
-    # filename="mylog.log",
-    format="[%(asctime)s][%(module)s][%(levelname)s][%(funcName)s][line %(lineno)d] - %(message)s",
+    format="%(levelname)s:     [%(asctime)s][%(module)s][%(funcName)s][line %(lineno)d] - %(message)s",
     datefmt='%H:%M:%S',
 )
 logger = logging.getLogger("VKAPI")
@@ -74,42 +74,52 @@ class VkGroupChatManager(BaseApiManager):
         )
         logger.info("sending message - done.")
 
-    async def add_task(self, task: Task) -> None:
+    async def add_task(self, task: VKMessage) -> None:
         "Send task to TaskManager"
         logger.info("Adding task")
 
-        url = self.task_manager_url+"/add_task"
-        output = requests.post(url, json=task.json())
+        url = "http://localhost:8087/add_task"
+        data = {
+            "text": task.text,
+            "meta": {"chat_id": task.meta.chat_id}
+        }
+
+        output = requests.post(url, json=data)
+
         logger.info(output)
         logger.info("Adding task - done.")
 
     async def add_answer(self, message: VKMessage) -> None:
         logger.info("Adding answer...")
-        if message.raw_photo is not None:
+        if message.raw_image is not None:
             # Hopefully it is a PIL Image and can be saved easily
             # any other cases must be taken into considiration
-            photo = str2obj(message.raw_photo)
+            photo = str2obj(message.raw_image)
             tmp_photo_path = "./generated.png"
             photo.save(tmp_photo_path)
             attachment = await self._upload_photo(tmp_photo_path)
             message.attachment = attachment
 
-        self.answers_q.put(message)
+        self.answers_q.put_nowait(message)
         logger.info("Adding answer - done.")
 
     async def _events_handler(self, events: list[VkBotEvent]) -> None:
         for event in events:
             if event.type == VkBotEventType.MESSAGE_NEW:
                 message = event.object["message"]
-                task = Task(
-                    text=message["text"],
-                    api_type=APIType.VkGroupChat,
-                    meta=MetaData(
-                        time=message["date"],
-                        chat_id=event.chat_id
+                if message["text"].split(" ")[0] == "/t2i":
+                    text = " ".join(message["text"].split(" ")[1:])
+                    logger.info(text)
+                    task = VKMessage(
+                        text=text,
+                        api_type="vk_group",
+                        meta=MetaData(
+                            time=message["date"],
+                            chat_id=event.chat_id
+                        )
                     )
-                )
-                await self.add_task(task)
+                    logger.info(task)
+                    await self.add_task(task)
 
     async def _answers_handler(self) -> None:
         while not self.answers_q.empty():
