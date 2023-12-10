@@ -2,38 +2,46 @@
 
 echo "[INFO]: start pre-commit hook"
 
+files_modified=$(git diff --name-only HEAD | grep -E '\w+\.py')
+
+if [ -z "$files_modified" ]; then
+  echo "[INFO]: there is no modified python scripts;"
+  echo "[INFO]: no formatting is required;"
+  exit 0
+fi
+
 echo "[INFO]: start flake8 stage"
 flake8_path=$(find -name "flake8.exe")
 
 if ! [ $flake8_path ]; then
-	echo "[ERROR]: no flake8 was found"
-	exit 1
+  echo "[ERROR]: no flake8 was found"
+  exit 1
 fi
 
-$flake8_path ./
+$flake8_path $files_modified
 
 if [ $? -ne 0 ]; then
-	echo "[ERROR]: flake8 stage was failed"
-	exit 1
+  echo "[ERROR]: flake8 stage was failed"
+  exit 1
 else
-	echo "[INFO]: flake8 stage successfully finished"
+  echo "[INFO]: flake8 stage successfully finished"
 fi
 
 echo "[INFO]: start black stage"
 black_path=$(find -name "black.exe")
 
 if ! [ $black_path ]; then
-	echo "[ERROR]: no black was found"
-	exit 1
+  echo "[ERROR]: no black was found"
+  exit 1
 fi
 
-$black_path ./ --check
+$black_path $files_modified --check
 
 if [ $? -ne 0 ]; then
-	echo "[ERROR]: black stage was failed"
-	exit 1
+  echo "[ERROR]: black stage was failed"
+  exit 1
 else
-	echo "[INFO]: black stage successfully finished"
+  echo "[INFO]: black stage successfully finished"
 fi
 
 echo "[INFO]: hook was successfully finished"
