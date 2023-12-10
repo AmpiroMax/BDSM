@@ -4,7 +4,7 @@ Multimodal chat bot
 
 Pet-project of Patratskiy Maxim and Evgrafov Michail
 
-The name BDSM comes from Broker Docker SQL and ML. Nothing really controvertial.
+The name BDSM comes from Broker Docker SQL and ML. Nothing really controversial.
 
 ## Linux
 
