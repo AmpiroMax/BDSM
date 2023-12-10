@@ -44,7 +44,11 @@ Approximate time of:
 - image generation 1-2 s
 - request time to message in VK ~2-3 s
 
-Links:
+## Note
 
-- [Technical documentation](https://docs.google.com/document/d/1sunezogn2XQRF8IXuGWlRd4VWdmb0EyL9DSEKVfTEuw/edit#heading=h.gjdgxs)
+Do not run at 00:00 - 02:00 Moscow time. Vk is reloading it's servers and vk_api can broke. Must be reevoke manually.
+
+## Links
+
+- [Idea](https://docs.google.com/document/d/1sunezogn2XQRF8IXuGWlRd4VWdmb0EyL9DSEKVfTEuw/edit#heading=h.gjdgxs)
 - [Meetings logs](https://docs.google.com/document/d/1cduKaf6tQiI3LKFeZ9xUvUelG3aqCJjW1Tpw0QZaCng/edit)

@@ -1,7 +1,7 @@
 import asyncio
 import logging
+from asyncio import Queue
 from contextlib import asynccontextmanager
-from queue import Queue
 
 import requests
 import uvicorn
@@ -124,7 +124,7 @@ class VkGroupChatManager(BaseApiManager):
 
     async def _answers_handler(self) -> None:
         while not self.answers_q.empty():
-            answer = self.answers_q.get()
+            answer = self.answers_q.get_nowait()
             await self.send_message_to_user(answer)
 
     async def _upload_photo(self, photo_path: str) -> str:

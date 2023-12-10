@@ -1,7 +1,7 @@
 import asyncio
 import logging
+from asyncio import Queue
 from contextlib import asynccontextmanager
-from queue import Queue
 
 import requests
 import uvicorn
