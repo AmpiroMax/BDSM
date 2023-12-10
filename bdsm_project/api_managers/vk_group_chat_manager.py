@@ -8,11 +8,12 @@ import uvicorn
 import vk_api.vk_api
 from base_api_manager import APIType, BaseApiManager, MetaData, Task, VKMessage
 from fastapi import FastAPI
-from pydantic import BaseModel
 from secured_data import group_id, vk_api_token
 from vk_api.bot_longpoll import VkBotEvent, VkBotEventType, VkBotLongPoll
 from vk_api.upload import VkUpload
 from vk_api.utils import get_random_id
+
+from bdsm_project.utils.serialization import str2obj
 
 logging.basicConfig(
     level=logging.INFO,
@@ -29,11 +30,12 @@ class VkGroupChatManager(BaseApiManager):
         self,
         api_token: str,
         group_id: int,
-        server_name: str = "VKGroupChatServer"
+        server_name: str = "VKGroupChatServer",
+        task_manager_port: int = 8085,
     ):
         logger.info("Initializing VkGroupChatManager")
         self.server_name = server_name
-
+        self.task_manager_url = f"http://localhost:{task_manager_port}"
         self.answers_q: Queue[VKMessage] = Queue()
 
         # Base VK API handler
@@ -51,12 +53,51 @@ class VkGroupChatManager(BaseApiManager):
         while True:
             events = self.vk_long_poll.check()
 
-            await self.events_handler(events)
-            await self.answers_handler()
+            await self._events_handler(events)
+            await self._answers_handler()
 
             await asyncio.sleep(0.1)
 
-    async def events_handler(self, events: list[VkBotEvent]) -> None:
+    async def send_message_to_user(self, message: VKMessage) -> None:
+        logger.info("Sending message...")
+        kwargs = {
+            "random_id": get_random_id(),
+            "chat_id": message.meta.chat_id,
+            "message": message.text,
+        }
+
+        if message.attachment is not None:
+            kwargs["attachment"] = message.attachment
+
+        self.vk_api.messages.send(
+            **kwargs
+        )
+        logger.info("sending message - done.")
+
+    async def add_task(self, task: Task) -> None:
+        "Send task to TaskManager"
+        logger.info("Adding task")
+
+        url = self.task_manager_url+"/add_task"
+        output = requests.post(url, json=task.json())
+        logger.info(output)
+        logger.info("Adding task - done.")
+
+    async def add_answer(self, message: VKMessage) -> None:
+        logger.info("Adding answer...")
+        if message.raw_photo is not None:
+            # Hopefully it is a PIL Image and can be saved easily
+            # any other cases must be taken into considiration
+            photo = str2obj(message.raw_photo)
+            tmp_photo_path = "./generated.png"
+            photo.save(tmp_photo_path)
+            attachment = await self._upload_photo(tmp_photo_path)
+            message.attachment = attachment
+
+        self.answers_q.put(message)
+        logger.info("Adding answer - done.")
+
+    async def _events_handler(self, events: list[VkBotEvent]) -> None:
         for event in events:
             if event.type == VkBotEventType.MESSAGE_NEW:
                 message = event.object["message"]
@@ -68,41 +109,17 @@ class VkGroupChatManager(BaseApiManager):
                         chat_id=event.chat_id
                     )
                 )
-                await self.put_task(task)
+                await self.add_task(task)
 
-    async def answers_handler(self) -> None:
+    async def _answers_handler(self) -> None:
         while not self.answers_q.empty():
             answer = self.answers_q.get()
-            await self.send_message(answer)
-
-    async def send_message(self, message: VKMessage) -> None:
-        logger.info("sending message")
-        kwargs = {
-            "random_id": get_random_id(),
-            "chat_id": message.meta.chat_id,
-            "message": message.text,
-        }
-
-        if message.attachment is not None:
-            kwargs["attachment"] = message.attachment
-
-        await self.vk_api.messages.send(
-            **kwargs
-        )
-
-    async def put_task(self, task: Task) -> None:
-        "Send task to TaskManager"
-
-        logger.info("forwading task")
-        url = "http://localhost:8082/add_task"
-
-        output = requests.post(url, json=task)
-        logger.info(output)
+            await self.send_message_to_user(answer)
 
     async def _upload_photo(self, photo_path: str) -> str:
-        logger.info("uploading photo")
-        response = await self.vk_upload.photo_messages(photo_path)[0]
-
+        logger.info("uploading photo...")
+        response = self.vk_upload.photo_messages(photo_path)[0]
+        logger.info("uploading photo - done.")
         owner_id = response['owner_id']
         photo_id = response['id']
         access_key = response['access_key']
@@ -123,11 +140,8 @@ if __name__ == "__main__":
 
     app = FastAPI(lifespan=lifespan)
 
-    class Text(BaseModel):
-        text: str
-
-    @app.post("/send_message")
-    async def send_message(message: VKMessage):
-        await vk_group_chat_manager.send_message(message=message)
+    @app.post("/add_answer")
+    async def add_answer(message: VKMessage):
+        await vk_group_chat_manager.add_answer(message=message)
 
     uvicorn.run(app, host="localhost", port=8083)

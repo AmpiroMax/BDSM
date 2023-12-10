@@ -1,5 +1,6 @@
 from abc import ABC, abstractmethod
 from enum import Enum
+from queue import Queue
 from typing import Optional
 
 from pydantic import BaseModel
@@ -18,7 +19,7 @@ class MetaData(BaseModel):
 
 
 class Message(BaseModel):
-    text: str
+    text: str = ""
     meta: MetaData
 
 
@@ -26,6 +27,8 @@ class VKMessage(Message):
     # Example of attachment string
     # {type}{owner_id}_{media_id}_{access_key}
     attachment: Optional[str] = None
+    photo_path: Optional[str] = None
+    raw_photo: Optional[str] = None
 
 
 class Task(BaseModel):
@@ -36,6 +39,7 @@ class Task(BaseModel):
 
 class BaseApiManager(ABC):
     server_name = "BaseName"
+    answers_q: Queue[Message] = Queue()
 
     def get_server_name(self) -> str:
         return self.server_name
@@ -46,11 +50,16 @@ class BaseApiManager(ABC):
         raise NotImplementedError("main_loop method is not implemeted")
 
     @abstractmethod
-    async def send_message(self, message: Message) -> None:
+    async def send_message_to_user(self, message: Message) -> None:
         "Sending message from api manager to client"
-        raise NotImplementedError("send_message method is not implemeted")
+        raise NotImplementedError("send_message_to_user method is not implemeted")
 
     @abstractmethod
-    async def put_task(self, task: Task) -> None:
-        "Send task to TaskManager"
-        raise NotImplementedError("put_task method is not implemeted")
+    async def add_task(self, task: Task) -> None:
+        "Add task to TaskManager"
+        raise NotImplementedError("add_task method is not implemeted")
+
+    @abstractmethod
+    async def add_answer(self, message: Message) -> None:
+        "Add answer from TaskManager into answers queue"
+        raise NotImplementedError("add_answer method is not implemeted")
