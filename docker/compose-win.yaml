@@ -1,0 +1,39 @@
+services:
+  kandinskiy:
+    build:
+      context: ..
+      dockerfile: ./docker/kandinskiy/dockerfile
+    image: kandinskiy:latest
+    container_name: kandinskiy
+    ports:
+      - "8087:8087"
+    volumes:
+      - "C:/tmp/kandinsky2:/tmp/kandinsky2"
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              device_ids: [ '0' ]
+              capabilities: [ gpu ]
+    network_mode: "host"
+
+  vk_api:
+    build:
+      context: ..
+      dockerfile: ./docker/vk_group_chat_api/dockerfile
+    image: vk_api:latest
+    container_name: vk_api
+    ports:
+      - "8083:8083"
+    network_mode: "host"
+
+  redis:
+    build:
+      context: ..
+      dockerfile: ./docker/redis/dockerfile
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "8085:8085"
+    network_mode: "host"

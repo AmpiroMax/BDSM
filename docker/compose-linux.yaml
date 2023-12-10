@@ -8,8 +8,7 @@ services:
     ports:
       - "8087:8087"
     volumes:
-      # - $HOME/.cache/huggingface/hub/:/root/.cache/huggingface/hub/
-      - "C:/tmp/kandinsky2:/tmp/kandinsky2"
+      - "/tmp/kandinsky2:/tmp/kandinsky2"
     deploy:
       resources:
         reservations:
