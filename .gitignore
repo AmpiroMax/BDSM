@@ -162,3 +162,6 @@ cython_debug/
 
 # Secured_files
 *secured_data*
+
+# VS Code
+*.vscode
