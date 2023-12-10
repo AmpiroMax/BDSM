@@ -2,7 +2,7 @@
 
 Multimodal chat bot
 
-Pet-project of Patratskiy Maxim and Evgrafov Michail. All code is, however, was written by Maxim Patratskiy.
+Pet-project of Patratskiy Maxim and Evgrafov Michail. All code, however, was written by Maxim Patratskiy.
 
 The name BDSM comes from Broker Docker SQL and ML. Nothing really controversial.
 
