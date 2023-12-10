@@ -1,0 +1,10 @@
+FROM python:3.10-bullseye as python-base
+
+EXPOSE 8082
+
+COPY /llm_model/requirements.txt .
+RUN pip install -r requirements.txt
+
+COPY /llm_model .
+
+ENTRYPOINT python3 -m llm_sorter.sorter_planner

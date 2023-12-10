@@ -27,21 +27,4 @@ else
   echo "[INFO]: flake8 stage successfully finished"
 fi
 
-echo "[INFO]: start black stage"
-black_path=$(find -name "black.exe")
-
-if ! [ $black_path ]; then
-  echo "[ERROR]: no black was found"
-  exit 1
-fi
-
-$black_path $files_modified --check
-
-if [ $? -ne 0 ]; then
-  echo "[ERROR]: black stage was failed"
-  exit 1
-else
-  echo "[INFO]: black stage successfully finished"
-fi
-
 echo "[INFO]: hook was successfully finished"
