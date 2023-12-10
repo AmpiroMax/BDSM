@@ -28,3 +28,13 @@ services:
     ports:
       - "8083:8083"
     network_mode: "host"
+
+  redis:
+    build:
+      context: ..
+      dockerfile: ./docker/redis/dockerfile
+    image: redis:latest
+    container_name: redis
+    ports:
+      - "8085:8085"
+    network_mode: "host"

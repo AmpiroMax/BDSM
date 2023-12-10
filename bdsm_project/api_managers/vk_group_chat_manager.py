@@ -120,6 +120,7 @@ class VkGroupChatManager(BaseApiManager):
                     )
                     logger.info(task)
                     await self.add_task(task)
+                    await self._add_to_db(task)
 
     async def _answers_handler(self) -> None:
         while not self.answers_q.empty():
@@ -136,6 +137,23 @@ class VkGroupChatManager(BaseApiManager):
 
         attachment = f'photo{owner_id}_{photo_id}_{access_key}'
         return attachment
+
+    async def _add_to_db(self, message: VKMessage) -> None:
+        "Add note to DataBase"
+        logger.info("Adding note ot db...")
+        key = f"{message.api_type}_{message.meta.time}_{message.meta.chat_id}"
+        value = message.text
+
+        url = "http://localhost:8085/add_to_db"
+        data = {
+            "key": key,
+            "value": value
+        }
+
+        output = requests.post(url, json=data)
+
+        logger.info(output)
+        logger.info("Adding note ot db - done.")
 
 
 if __name__ == "__main__":
