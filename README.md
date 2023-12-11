@@ -52,3 +52,4 @@ Do not run at 00:00 - 02:00 Moscow time. Vk is reloading it's servers and vk_api
 
 - [Idea](https://docs.google.com/document/d/1sunezogn2XQRF8IXuGWlRd4VWdmb0EyL9DSEKVfTEuw/edit#heading=h.gjdgxs)
 - [Meetings logs](https://docs.google.com/document/d/1cduKaf6tQiI3LKFeZ9xUvUelG3aqCJjW1Tpw0QZaCng/edit)
+- [Presentation](https://docs.google.com/presentation/d/1UE9Dc4OGZOk07BRos3oWV8vR7IcPH7JNnFjVwet8epc/edit?usp=sharing)
